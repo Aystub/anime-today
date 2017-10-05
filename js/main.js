@@ -7,8 +7,9 @@ var FALL = [9, 10, 11];
 var ANIME;
 var TODAY = 0;
 var TOMORROW = 1;
-
-
+var sort_by = 0; // Sort by time [default]
+var block_adult_content = false;
+var active_tab = TODAY;
 // Run all the things
 $(function() {
     init();
@@ -21,6 +22,7 @@ function init(){
     getAniAccessToken();
     initTodayOnClickListener();
     initTomorrowOnClickListener();
+    initSortOnClickListener();
 }
 
 
@@ -49,6 +51,7 @@ function getAniAccessToken() {
         error: function(data){
             console.log("Wat?");
             console.log(data);
+            setErrorMessageDisplay(true);
         }
     });
 }
@@ -70,10 +73,12 @@ function getAnime(){
         success: function(data){
             ANIME = data;
             processAnime(TODAY);
+            setErrorMessageDisplay(false);
         },
         error: function(data){
             console.log("Wat?");
             console.log(data);
+            setErrorMessageDisplay(true);
         }
     });
 }
@@ -87,6 +92,10 @@ function buildAnimeRequestURL(){
         "full_page=true";
 }
 
+//Sets the visibility of the connection error message
+function setErrorMessageDisplay(state){
+    $('#error-message').attr('hidden',!state);
+}
 
 // Returns a list (shows) that contains all the animes for either Today or Tomorrow
 function processAnime(flag){
@@ -112,6 +121,15 @@ function clearCardHolder(){
     $("#card-holder").empty();
 }
 
+var sort_functions = [function(a, b){
+    return (new Date(a.airing.time)).valueOf() - (new Date(b.airing.time).valueOf())
+}, // Sort function for time
+function(a, b){
+    if(a.title_english < b.title_english) return -1;
+    if(a.title_english > b.title_english) return 1;
+    return 0;
+} // Sort function for Name
+];
 
 // Looks through all data we got back from the API call and figures out if the show is
 // airing today, if so, add it to a list to be returned
@@ -122,10 +140,14 @@ function getTodaysAnime(){
         if(anime.airing != null && anime.airing.time != null) {
             var airingDate = new Date(anime.airing.time);
             if (isToday(airingDate)) {
-                shows.push(anime);
+                if(!block_adult_content || (block_adult_content && anime.adult == false)) {
+                    shows.push(anime);
+                }
             }
         }
     }
+    //Sort
+    shows.sort(sort_functions[sort_by]);
     return shows;
 }
 
@@ -165,10 +187,14 @@ function getTomorrowsAnime(){
         if(anime.airing != null && anime.airing.time != null) {
             var airingDate = new Date(anime.airing.time);
             if (isTomorrow(airingDate)) {
-                shows.push(anime);
+                if(!block_adult_content || (block_adult_content && anime.adult == false)) {
+                    shows.push(anime);
+                }
             }
         }
     }
+    //Sort
+    shows.sort(sort_functions[sort_by]);
     return shows;
 }
 
@@ -181,8 +207,9 @@ function isTomorrow(date){
 
 // Returns true if a given date is tomorrow (if today is the 14th, returns true if the given date is for the 15th), else false
 function isThisDateTomorrow(date){
-    var tomorrow = new Date().getDate() + 1;
-    return date === tomorrow;
+    var tomorrow = new Date();
+    tomorrow.setDate(new Date().getDate() + 1);
+    return date === tomorrow.getDate();
 }
 
 
@@ -203,10 +230,27 @@ function addCard(data) {
     $("#card-holder").append(cardBody);
 }
 
+// Setup the active state of the buttons
+function setButtonState(button_id, active = true) {
+    if(active) {
+        $(button_id).removeClass("uk-button-default");
+        $(button_id).addClass("uk-button-active");    
+    }
+    else {
+        $(button_id).removeClass("uk-button-active");   
+        $(button_id).addClass("uk-button-default");
+    }
+}
+
+// Get the active state of the buttons
+function getButtonState(button_id) {
+    return $(button_id).hasClass("uk-button-active");
+}
 
 // Setup a listener on the "Today" tab in the UI
 function initTodayOnClickListener(){
     $("#today").click(function(){
+        active_tab = TODAY;
         processAnime(TODAY);
     });
 }
@@ -215,16 +259,41 @@ function initTodayOnClickListener(){
 // Setup a listener on the "Tomorrow" tab in the UI
 function initTomorrowOnClickListener(){
     $("#tomorrow").click(function(){
+        active_tab = TOMORROW;
         processAnime(TOMORROW);
     });
 }
 
+// Setup listeners on the switches in the UI
+function initSortOnClickListener(){
+    $("#sort-by-time").click(function(){
+        setButtonState("#sort-by-time", true);
+        setButtonState("#sort-by-name", false);
+        sort_by = 0;
+        processAnime(active_tab);
+    });
+    $("#sort-by-name").click(function(){
+        setButtonState("#sort-by-time", false);
+        setButtonState("#sort-by-name", true);
+        sort_by = 1;
+        processAnime(active_tab);
+    });
+
+    $("#block-adult").click(function(){
+        isActive = getButtonState("#block-adult");
+        block_adult_content = !isActive;
+        setButtonState("#block-adult", !isActive);
+        processAnime(active_tab);
+    });
+}
 
 // Initial setup of the Today and Tomorrow tabs so they can show the date in them
 function initTabs(){
     var date = new Date();
+    var tomorrow_date = new Date();
+    tomorrow_date.setDate(tomorrow_date.getDate() + 1);
     var today = date.getMonth() + 1 + "/" + date.getDate() + "/" + date.getFullYear();
-    var tomorrow = date.getMonth() + 1 + "/" + (date.getDate() + 1) + "/" + date.getFullYear();
+    var tomorrow = tomorrow_date.getMonth() + 1 + "/" + tomorrow_date.getDate() + "/" + tomorrow_date.getFullYear();
     $("#today").html("Today (" + today + ")");
     $("#tomorrow").html("Tomorrow (" + tomorrow + ")");
 }
