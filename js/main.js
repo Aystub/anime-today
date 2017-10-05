@@ -7,7 +7,7 @@ var FALL = [9, 10, 11];
 var ANIME;
 var TODAY = 0;
 var TOMORROW = 1;
-
+var sort_by = 0; // Sort by time [default]
 
 // Run all the things
 $(function() {
@@ -21,6 +21,7 @@ function init(){
     getAniAccessToken();
     initTodayOnClickListener();
     initTomorrowOnClickListener();
+    initSortOnClickListener();
 }
 
 
@@ -90,6 +91,7 @@ function buildAnimeRequestURL(){
         "full_page=true";
 }
 
+//Sets the visibility of the connection error message
 function setErrorMessageDisplay(state){
     $('#error-message').attr('hidden',!state);
 }
@@ -118,6 +120,15 @@ function clearCardHolder(){
     $("#card-holder").empty();
 }
 
+var sort_functions = [function(a, b){
+    return (new Date(a.airing.time)).valueOf() - (new Date(b.airing.time).valueOf())
+}, // Sort function for time
+function(a, b){
+    if(a.title_english < b.title_english) return -1;
+    if(a.title_english > b.title_english) return 1;
+    return 0;
+} // Sort function for Name
+];
 
 // Looks through all data we got back from the API call and figures out if the show is
 // airing today, if so, add it to a list to be returned
@@ -132,6 +143,7 @@ function getTodaysAnime(){
             }
         }
     }
+    shows.sort(sort_functions[sort_by]);
     return shows;
 }
 
@@ -175,6 +187,7 @@ function getTomorrowsAnime(){
             }
         }
     }
+    shows.sort(sort_functions[sort_by]);
     return shows;
 }
 
@@ -209,6 +222,21 @@ function addCard(data) {
     $("#card-holder").append(cardBody);
 }
 
+// Setup the active state of the sot buttons
+function setButtonActive(sort_key) {
+    if(sort_key == "time") {
+        $("#sort-by-time").removeClass("uk-button-default");
+        $("#sort-by-time").addClass("uk-button-active");
+        $("#sort-by-name").removeClass("uk-button-active");
+        $("#sort-by-name").addClass("uk-button-default");
+    }
+    else if(sort_key == "name") {
+        $("#sort-by-name").removeClass("uk-button-default");
+        $("#sort-by-name").addClass("uk-button-active");
+        $("#sort-by-time").removeClass("uk-button-active");
+        $("#sort-by-time").addClass("uk-button-default");
+    }
+}
 
 // Setup a listener on the "Today" tab in the UI
 function initTodayOnClickListener(){
@@ -221,6 +249,22 @@ function initTodayOnClickListener(){
 // Setup a listener on the "Tomorrow" tab in the UI
 function initTomorrowOnClickListener(){
     $("#tomorrow").click(function(){
+        processAnime(TOMORROW);
+    });
+}
+
+// Setup listeners on the sort switches in the UI
+function initSortOnClickListener(){
+    $("#sort-by-time").click(function(){
+        setButtonActive("time");
+        sort_by = 0;
+        processAnime(TODAY);
+        processAnime(TOMORROW);
+    });
+    $("#sort-by-name").click(function(){
+        setButtonActive("name");
+        sort_by = 1;
+        processAnime(TODAY);
         processAnime(TOMORROW);
     });
 }

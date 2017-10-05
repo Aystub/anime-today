@@ -121,6 +121,10 @@ textarea {
     z-index: -1;
 }
 
+#sort-switches-div {
+    margin-bottom: 10px
+}
+
 .nav-bar-buffer{
     width: 100%;
     height: 80px;
