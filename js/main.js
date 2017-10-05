@@ -200,7 +200,8 @@ function isTomorrow(date){
 
 // Returns true if a given date is tomorrow (if today is the 14th, returns true if the given date is for the 15th), else false
 function isThisDateTomorrow(date){
-    var tomorrow = new Date().getDate() + 1;
+    var tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
     return date === tomorrow;
 }
 
@@ -273,8 +274,10 @@ function initSortOnClickListener(){
 // Initial setup of the Today and Tomorrow tabs so they can show the date in them
 function initTabs(){
     var date = new Date();
+    var tomorrow_date = new Date();
+    tomorrow_date.setDate(tomorrow_date.getDate() + 1);
     var today = date.getMonth() + 1 + "/" + date.getDate() + "/" + date.getFullYear();
-    var tomorrow = date.getMonth() + 1 + "/" + (date.getDate() + 1) + "/" + date.getFullYear();
+    var tomorrow = tomorrow_date.getMonth() + 1 + "/" + tomorrow_date.getDate() + "/" + tomorrow_date.getFullYear();
     $("#today").html("Today (" + today + ")");
     $("#tomorrow").html("Tomorrow (" + tomorrow + ")");
 }
