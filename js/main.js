@@ -8,7 +8,7 @@ var ANIME;
 var TODAY = 0;
 var TOMORROW = 1;
 var sort_by = 0; // Sort by time [default]
-
+var block_adult_content = false;
 // Run all the things
 $(function() {
     init();
@@ -143,6 +143,9 @@ function getTodaysAnime(){
             }
         }
     }
+    //Adult Filter
+    if(block_adult_content) shows.filter(function(anime) {return !anime.adult;});
+    //Sort
     shows.sort(sort_functions[sort_by]);
     return shows;
 }
@@ -187,6 +190,9 @@ function getTomorrowsAnime(){
             }
         }
     }
+    //Adult Filter
+    if(block_adult_content) shows.filter(function(anime) {return !anime.adult;});
+    //Sort
     shows.sort(sort_functions[sort_by]);
     return shows;
 }
@@ -200,8 +206,9 @@ function isTomorrow(date){
 
 // Returns true if a given date is tomorrow (if today is the 14th, returns true if the given date is for the 15th), else false
 function isThisDateTomorrow(date){
-    var tomorrow = new Date().getDate() + 1;
-    return date === tomorrow;
+    var tomorrow = new Date();
+    tomorrow.setDate(new Date().getDate() + 1);
+    return date === tomorrow.getDate();
 }
 
 
@@ -222,20 +229,21 @@ function addCard(data) {
     $("#card-holder").append(cardBody);
 }
 
-// Setup the active state of the sot buttons
-function setButtonActive(sort_key) {
-    if(sort_key == "time") {
-        $("#sort-by-time").removeClass("uk-button-default");
-        $("#sort-by-time").addClass("uk-button-active");
-        $("#sort-by-name").removeClass("uk-button-active");
-        $("#sort-by-name").addClass("uk-button-default");
+// Setup the active state of the buttons
+function setButtonState(button_id, active = true) {
+    if(active) {
+        $(button_id).removeClass("uk-button-default");
+        $(button_id).addClass("uk-button-active");    
     }
-    else if(sort_key == "name") {
-        $("#sort-by-name").removeClass("uk-button-default");
-        $("#sort-by-name").addClass("uk-button-active");
-        $("#sort-by-time").removeClass("uk-button-active");
-        $("#sort-by-time").addClass("uk-button-default");
+    else {
+        $(button_id).removeClass("uk-button-active");   
+        $(button_id).addClass("uk-button-default");
     }
+}
+
+// Get the active state of the buttons
+function getButtonState(button_id) {
+    return $(button_id).hasClass("uk-button-active");
 }
 
 // Setup a listener on the "Today" tab in the UI
@@ -253,22 +261,31 @@ function initTomorrowOnClickListener(){
     });
 }
 
-// Setup listeners on the sort switches in the UI
+// Setup listeners on the switches in the UI
 function initSortOnClickListener(){
     $("#sort-by-time").click(function(){
-        setButtonActive("time");
+        setButtonState("#sort-by-time", true);
+        setButtonState("#sort-by-name", false);
         sort_by = 0;
         processAnime(TODAY);
         processAnime(TOMORROW);
     });
     $("#sort-by-name").click(function(){
-        setButtonActive("name");
+        setButtonState("#sort-by-time", false);
+        setButtonState("#sort-by-name", true);
         sort_by = 1;
         processAnime(TODAY);
         processAnime(TOMORROW);
     });
-}
 
+    $("#block-adult").click(function(){
+        isActive = getButtonState("#block-adult");
+        block_adult_content = !isActive;
+        setButtonState("#block-adult", !isActive);
+        processAnime(TODAY);
+        processAnime(TOMORROW);
+    });
+}
 
 // Initial setup of the Today and Tomorrow tabs so they can show the date in them
 function initTabs(){
