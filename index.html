@@ -1,0 +1,51 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>Anime Today</title>
+        <meta name="description" content="View today's and tomorrow's anime releases">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="shortcut icon" href="favicon.ico" />
+        <link rel="stylesheet" href="css/normalize.css">
+        <link rel="stylesheet" href="css/uikit.min.css">
+        <link rel="stylesheet" href="css/main.css">
+        <script src="js/vendor/modernizr-2.8.3.min.js"></script>
+    </head>
+    <body>
+
+        <div class="nav-bar accent-color"></div>
+
+        <div class="uk-container">
+
+            <div><h3 class="white nav-bar-buffer uk-width-1-1">Anime Today</h3></div>
+
+            <ul class="uk-child-width-expand" uk-tab>
+                <li class="uk-active"><a id="today" class="tab-item" href="">Today</a></li>
+                <li><a class="tab-item" id="tomorrow" href="">Tomorrow</a></li>
+            </ul>
+
+            <div id="card-holder" class="uk-child-width-1-2 uk-child-width-1-3@s uk-child-width-1-4@m uk-child-width-1-5@l padding-bottom-40 uk-text-center" uk-grid>
+
+            </div>
+        </div>
+
+
+        <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
+        <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.12.0.min.js"><\/script>')</script>
+        <script src="js/plugins.js"></script>
+        <script src="js/auth.js"></script>
+        <script src="js/main.js"></script>
+        <script src="js/uikit.min.js"></script>
+        <script src="js/uikit-icons.min.js"></script>
+        <script>
+            (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+            })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+            ga('create', getGoogleAnalyticsId(), 'auto');
+            ga('send', 'pageview');
+        </script>
+    </body>
+</html>
