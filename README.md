@@ -3,7 +3,7 @@
 This is a simple web-app built using the [AniList API](http://anilist-api.readthedocs.io/en/latest/) for displaying the shows currently airing today and tomorrow. Can be seen live [here](http://anime-today.com)
 
 ## Setup
-This was built using just vanilla JS (& JQuery ;D), CSS, and HTML. Nothing fancy. Only thing to note is needing to edit the methods in `auth.js` You need a Client Id and Secret from AniList, this app only requires Client Credientials though see [AniList - Client Credentials](http://anilist-api.readthedocs.io/en/latest/authentication.html#grant-client-credentials) for more info. An example `auth.js` would be: 
+This was built using just vanilla JS (& JQuery), CSS, and HTML. Nothing fancy. Only thing to note is needing to edit the methods in `auth.js` You need a Client Id and Secret from AniList, this app only requires Client Credientials though see [AniList - Client Credentials](http://anilist-api.readthedocs.io/en/latest/authentication.html#grant-client-credentials) for more info. An example `auth.js` would be: 
 
 ```
 function getId() {
