@@ -140,12 +140,12 @@ function getTodaysAnime(){
         if(anime.airing != null && anime.airing.time != null) {
             var airingDate = new Date(anime.airing.time);
             if (isToday(airingDate)) {
-                shows.push(anime);
+                if(!block_adult_content || (block_adult_content && anime.adult == false)) {
+                    shows.push(anime);
+                }
             }
         }
     }
-    //Adult Filter
-    if(block_adult_content) shows.filter(function(anime) {return !anime.adult;});
     //Sort
     shows.sort(sort_functions[sort_by]);
     return shows;
@@ -187,12 +187,12 @@ function getTomorrowsAnime(){
         if(anime.airing != null && anime.airing.time != null) {
             var airingDate = new Date(anime.airing.time);
             if (isTomorrow(airingDate)) {
-                shows.push(anime);
+                if(!block_adult_content || (block_adult_content && anime.adult == false)) {
+                    shows.push(anime);
+                }
             }
         }
     }
-    //Adult Filter
-    if(block_adult_content) shows.filter(function(anime) {console.log(anime.adult);return !anime.adult;});
     //Sort
     shows.sort(sort_functions[sort_by]);
     return shows;
