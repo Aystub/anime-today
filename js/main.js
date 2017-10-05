@@ -49,6 +49,7 @@ function getAniAccessToken() {
         error: function(data){
             console.log("Wat?");
             console.log(data);
+            setErrorMessageDisplay(true);
         }
     });
 }
@@ -70,10 +71,12 @@ function getAnime(){
         success: function(data){
             ANIME = data;
             processAnime(TODAY);
+            setErrorMessageDisplay(false);
         },
         error: function(data){
             console.log("Wat?");
             console.log(data);
+            setErrorMessageDisplay(true);
         }
     });
 }
@@ -87,6 +90,9 @@ function buildAnimeRequestURL(){
         "full_page=true";
 }
 
+function setErrorMessageDisplay(state){
+    $('#error-message').attr('hidden',!state);
+}
 
 // Returns a list (shows) that contains all the animes for either Today or Tomorrow
 function processAnime(flag){
