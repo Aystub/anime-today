@@ -9,6 +9,7 @@ var TODAY = 0;
 var TOMORROW = 1;
 var sort_by = 0; // Sort by time [default]
 var block_adult_content = false;
+var active_tab = TODAY;
 // Run all the things
 $(function() {
     init();
@@ -191,7 +192,7 @@ function getTomorrowsAnime(){
         }
     }
     //Adult Filter
-    if(block_adult_content) shows.filter(function(anime) {return !anime.adult;});
+    if(block_adult_content) shows.filter(function(anime) {console.log(anime.adult);return !anime.adult;});
     //Sort
     shows.sort(sort_functions[sort_by]);
     return shows;
@@ -249,6 +250,7 @@ function getButtonState(button_id) {
 // Setup a listener on the "Today" tab in the UI
 function initTodayOnClickListener(){
     $("#today").click(function(){
+        active_tab = TODAY;
         processAnime(TODAY);
     });
 }
@@ -257,6 +259,7 @@ function initTodayOnClickListener(){
 // Setup a listener on the "Tomorrow" tab in the UI
 function initTomorrowOnClickListener(){
     $("#tomorrow").click(function(){
+        active_tab = TOMORROW;
         processAnime(TOMORROW);
     });
 }
@@ -267,23 +270,20 @@ function initSortOnClickListener(){
         setButtonState("#sort-by-time", true);
         setButtonState("#sort-by-name", false);
         sort_by = 0;
-        processAnime(TODAY);
-        processAnime(TOMORROW);
+        processAnime(active_tab);
     });
     $("#sort-by-name").click(function(){
         setButtonState("#sort-by-time", false);
         setButtonState("#sort-by-name", true);
         sort_by = 1;
-        processAnime(TODAY);
-        processAnime(TOMORROW);
+        processAnime(active_tab);
     });
 
     $("#block-adult").click(function(){
         isActive = getButtonState("#block-adult");
         block_adult_content = !isActive;
         setButtonState("#block-adult", !isActive);
-        processAnime(TODAY);
-        processAnime(TOMORROW);
+        processAnime(active_tab);
     });
 }
 
