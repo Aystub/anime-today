@@ -8,3 +8,4 @@
 .idea
 .idea/*
 */my-auth.js
+.DS_Store

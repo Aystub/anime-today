@@ -23,6 +23,7 @@ function init(){
     initTodayOnClickListener();
     initTomorrowOnClickListener();
     initSortOnClickListener();
+    initAdultFilterClickListener();
 }
 
 
@@ -122,6 +123,8 @@ function clearCardHolder(){
 }
 
 var sort_functions = [function(a, b){
+    console.log(new Date(a.airing.time).valueOf());
+    console.log(new Date(b.airing.time).valueOf());
     return (new Date(a.airing.time)).valueOf() - (new Date(b.airing.time).valueOf())
 }, // Sort function for time
 function(a, b){
@@ -140,7 +143,7 @@ function getTodaysAnime(){
         if(anime.airing != null && anime.airing.time != null) {
             var airingDate = new Date(anime.airing.time);
             if (isToday(airingDate)) {
-                if(!block_adult_content || (block_adult_content && anime.adult == false)) {
+                if((block_adult_content && anime.adult == false) || !block_adult_content) {
                     shows.push(anime);
                 }
             }
@@ -187,7 +190,7 @@ function getTomorrowsAnime(){
         if(anime.airing != null && anime.airing.time != null) {
             var airingDate = new Date(anime.airing.time);
             if (isTomorrow(airingDate)) {
-                if(!block_adult_content || (block_adult_content && anime.adult == false)) {
+                if((block_adult_content && anime.adult == false) || !block_adult_content) {
                     shows.push(anime);
                 }
             }
@@ -230,23 +233,6 @@ function addCard(data) {
     $("#card-holder").append(cardBody);
 }
 
-// Setup the active state of the buttons
-function setButtonState(button_id, active = true) {
-    if(active) {
-        $(button_id).removeClass("uk-button-default");
-        $(button_id).addClass("uk-button-active");    
-    }
-    else {
-        $(button_id).removeClass("uk-button-active");   
-        $(button_id).addClass("uk-button-default");
-    }
-}
-
-// Get the active state of the buttons
-function getButtonState(button_id) {
-    return $(button_id).hasClass("uk-button-active");
-}
-
 // Setup a listener on the "Today" tab in the UI
 function initTodayOnClickListener(){
     $("#today").click(function(){
@@ -278,13 +264,31 @@ function initSortOnClickListener(){
         sort_by = 1;
         processAnime(active_tab);
     });
+}
 
+function initAdultFilterClickListener() {
     $("#block-adult").click(function(){
         isActive = getButtonState("#block-adult");
         block_adult_content = !isActive;
-        setButtonState("#block-adult", !isActive);
+        setButtonState("#block-adult");
         processAnime(active_tab);
     });
+}
+
+// Setup the active state of the buttons
+function setButtonState(button_id) {
+    $(button_id).toggleClass("uk-button-default");
+    $(button_id).toggleClass("uk-button-active"); 
+    if(getButtonState(button_id)){
+        $(button_id).html('HIDE 18+ CONTENT');
+    } else{
+        $(button_id).html('SHOW 18+ CONTENT');
+    }
+}
+
+// Get the active state of the buttons
+function getButtonState(button_id) {
+    return $(button_id).hasClass("uk-button-active");
 }
 
 // Initial setup of the Today and Tomorrow tabs so they can show the date in them
