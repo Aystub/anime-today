@@ -132,6 +132,11 @@ textarea {
     line-height: 80px;
 }
 
+#block-adult{
+    width:206px;
+    text-align:center;
+}
+
 
 /* ==========================================================================
    Helper classes
