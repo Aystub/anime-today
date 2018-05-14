@@ -4,7 +4,7 @@ This is a simple web-app built using the [AniList API](https://github.com/AniLis
 
 
 ## Setup
-This was built using just vanilla JS (& JQuery), CSS, and HTML. Nothing fancy. Then just open `index.html` in your browser and you should be good to go. 
+This was built using just vanilla JS (& JQuery), CSS, and HTML. Nothing fancy. Just open `index.html` in your browser and you should be good to go. 
 
 Only thing to note is you will see an errors related to the GA setup. `js/googleAnalyticsid.js 404 (File not found)` and `getGoogleAnalyticsId is not defined`. Doesn't affect anything running locally, I was just lazy and didn't want to stub in a dummy key every time I committed. 
 
