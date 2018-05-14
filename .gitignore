@@ -9,3 +9,9 @@
 .idea/*
 */my-auth.js
 .DS_Store
+*/index.sublime-workspace
+index.sublime-workspace
+js/dummy-auth.js
+browserconfig.xml
+crossdomain.xml
+js/googleAnalyticsId.js

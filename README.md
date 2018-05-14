@@ -1,34 +1,29 @@
 # Anime-Today
 
-This is a simple web-app built using the [AniList API](http://anilist-api.readthedocs.io/en/latest/) for displaying the shows currently airing today and tomorrow. Can be seen live [here](http://anime-today.com)
+This is a simple web-app built using the [AniList API](https://github.com/AniList/ApiV2-GraphQL-Docs) for displaying the shows currently airing today and tomorrow. Can be seen live [here](http://anime-today.com)
+
 
 ## Setup
-This was built using just vanilla JS (& JQuery), CSS, and HTML. Nothing fancy. Only thing to note is needing to edit the methods in `auth.js` You need a Client Id and Secret from AniList, this app only requires Client Credientials though see [AniList - Client Credentials](http://anilist-api.readthedocs.io/en/latest/authentication.html#grant-client-credentials) for more info. An example `auth.js` would be: 
+This was built using just vanilla JS (& JQuery), CSS, and HTML. Nothing fancy. Then just open `index.html` in your browser and you should be good to go. 
 
-```
-function getId() {
-    return "abcdefghijklmnop" // Your <ID>;
-}
+Only thing to note is you will see an errors related to the GA setup. `js/googleAnalyticsid.js 404 (File not found)` and `getGoogleAnalyticsId is not defined`. Doesn't affect anything running locally, I was just lazy and didn't want to stub in a dummy key every time I committed. 
 
-function getSecret() {
-    return "a1b2c3d4e5f6g7h8" // Your <Secret>
-}
 
-function getGoogleAnalyticsId() {
-    return ""; // Not needed for testing
-}
-```
+## Update:
+Migrated to V2 of AniList's API. It's using GraphQL for data retrieval and doesn't require any Access Tokens for publically accessible info like what this site pulls. 
 
-Then just open `index.html` in your browser and you should be good to go
+If you want to checkout GraphQL AniList has a helpful [getting started guide](https://anilist.gitbooks.io/anilist-apiv2-docs/graphql/getting-started.html) on their site, along with the [full docs](https://anilist.github.io/ApiV2-GraphQL-Docs/) for what you can query. They also have a [live query editor](https://anilist.co/graphiql) which is super helpful. 
 
-#####  Note: [V2 of the AniList API](https://github.com/AniList/ApiV2-GraphQL-Docs) is in development and this project will be updated once that is stable, V2 of the API does not require Client Creds for public info (what this app accesses) so should simplify things a bit
+##### Note: You have to be signed into an [anilist.co](https://anilist.co/) account that's setup as a developer for the live editor to work.
+
+
 
 ## Author & License 
 
 Built by [Aystub](https://github.com/Aystub) 
 
 ```
-Copyright 2017 Aystub
+Copyright 2018 Aystub
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

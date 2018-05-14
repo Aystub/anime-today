@@ -1,15 +1,6 @@
-var BASE_URL = "https://anilist.co/api";
-var TOKEN;
-var WINTER = [0, 1, 2];
-var SPRING = [3, 4, 5];
-var SUMMER = [6, 7, 8];
-var FALL = [9, 10, 11];
 var ANIME;
-var TODAY = 0;
-var TOMORROW = 1;
-var sort_by = 0; // Sort by time [default]
-var block_adult_content = false;
-var active_tab = TODAY;
+var block_adult_content = true;
+
 // Run all the things
 $(function() {
     init();
@@ -19,7 +10,7 @@ $(function() {
 function init(){
     welcomeJonn();
     initTabs();
-    getAniAccessToken();
+    getAnime();
     initTodayOnClickListener();
     initTomorrowOnClickListener();
     initSortOnClickListener();
@@ -40,57 +31,23 @@ function welcomeJonn(){
 }
 
 
-// Get access token
-function getAniAccessToken() {
+function getAnime() {
     $.ajax({
         type: "POST",
-        url: buildAniAuthRequestURL(),
-        success: function(data){
-            TOKEN = data.access_token;
-            getAnime();
-        },
-        error: function(data){
-            console.log("Wat?");
-            console.log(data);
-            setErrorMessageDisplay(true);
-        }
-    });
-}
-
-
-function buildAniAuthRequestURL(){
-    return BASE_URL + "/auth/access_token?" + "&" +
-        "grant_type=client_credentials" + "&" +
-        "client_id=" + getId() + "&" +
-        "client_secret=" + getSecret();
-}
-
-
-// Grab all the currently airing animes from anilist API
-function getAnime(){
-    $.ajax({
-        type: "GET",
-        url: buildAnimeRequestURL(),
-        success: function(data){
-            ANIME = data;
-            processAnime(TODAY);
+        url: "https://graphql.anilist.co",
+        data: { query: graphQLQuery, variables: graphQLVariables },
+        success: function(result){
+            console.log(result);
+            ANIME = result.data.Page.airingSchedules;
+            processAnime();
             setErrorMessageDisplay(false);
         },
-        error: function(data){
+        error: function(result){
             console.log("Wat?");
-            console.log(data);
+            console.log(result);
             setErrorMessageDisplay(true);
         }
-    });
-}
-
-
-function buildAnimeRequestURL(){
-    return BASE_URL + "/browse/anime?" +
-        "status=Currently Airing" + "&" +
-        "access_token=" + TOKEN + "&" +
-        "airing_data=true" + "&" +
-        "full_page=true";
+    })
 }
 
 //Sets the visibility of the connection error message
@@ -99,20 +56,12 @@ function setErrorMessageDisplay(state){
 }
 
 // Returns a list (shows) that contains all the animes for either Today or Tomorrow
-function processAnime(flag){
+function processAnime(){
     clearCardHolder();
-    var shows;
-    switch(flag){
-        case TODAY:
-            shows = getTodaysAnime();
-            break;
-        case TOMORROW:
-            shows = getTomorrowsAnime();
-            break;
-    }
-
-    for(var i = 0; i < shows.length; i++){
-        addCard(shows[i]);
+    for(var i = 0; i < ANIME.length; i++){
+        if (ANIME[i].media.isAdult == false || !block_adult_content) {
+            addCard(ANIME[i]);
+        }
     }
 }
 
@@ -122,109 +71,17 @@ function clearCardHolder(){
     $("#card-holder").empty();
 }
 
-var sort_functions = [function(a, b){
-    console.log(new Date(a.airing.time).valueOf());
-    console.log(new Date(b.airing.time).valueOf());
-    return (new Date(a.airing.time)).valueOf() - (new Date(b.airing.time).valueOf())
-}, // Sort function for time
-function(a, b){
-    if(a.title_english < b.title_english) return -1;
-    if(a.title_english > b.title_english) return 1;
-    return 0;
-} // Sort function for Name
-];
-
-// Looks through all data we got back from the API call and figures out if the show is
-// airing today, if so, add it to a list to be returned
-function getTodaysAnime(){
-    var shows = [];
-    for(var i = 0; i < ANIME.length; i++){
-        var anime = ANIME[i];
-        if(anime.airing != null && anime.airing.time != null) {
-            var airingDate = new Date(anime.airing.time);
-            if (isToday(airingDate)) {
-                if((block_adult_content && anime.adult == false) || !block_adult_content) {
-                    shows.push(anime);
-                }
-            }
-        }
-    }
-    //Sort
-    shows.sort(sort_functions[sort_by]);
-    return shows;
-}
-
-
-// Returns true if a given date is today, else false
-function isToday(date){
-    return isThisMonth(date.getMonth()) && isThisDate(date.getDate()) && isThisYear(date.getFullYear());
-}
-
-
-// Returns true if a given date is for this current month, else false
-function isThisMonth(month){
-    var thisMonth = new Date().getMonth();
-    return month === thisMonth;
-}
-
-
-// Returns true if a given date is todays date ("date" meaning like the 14th), else false
-function isThisDate(date){
-    var today = new Date().getDate();
-    var thisDayNextWeek = today+7;
-    return date === today || date === thisDayNextWeek;
-}
-
-
-// Returns true if a given date is for this current year, else false
-function isThisYear(year){
-    return year === new Date().getFullYear();
-}
-
-
-// Just like getTodaysAnime() but finding tomorrow's shows
-function getTomorrowsAnime(){
-    var shows = [];
-    for(var i = 0; i < ANIME.length; i++){
-        var anime = ANIME[i];
-        if(anime.airing != null && anime.airing.time != null) {
-            var airingDate = new Date(anime.airing.time);
-            if (isTomorrow(airingDate)) {
-                if((block_adult_content && anime.adult == false) || !block_adult_content) {
-                    shows.push(anime);
-                }
-            }
-        }
-    }
-    //Sort
-    shows.sort(sort_functions[sort_by]);
-    return shows;
-}
-
-
-// Returns true if a given date is tomorrow
-function isTomorrow(date){
-    return isThisMonth(date.getMonth()) && isThisDateTomorrow(date.getDate()) && isThisYear(date.getFullYear());
-}
-
-
-// Returns true if a given date is tomorrow (if today is the 14th, returns true if the given date is for the 15th), else false
-function isThisDateTomorrow(date){
-    var tomorrow = new Date();
-    tomorrow.setDate(new Date().getDate() + 1);
-    return date === tomorrow.getDate();
-}
-
 
 // Generate a "card" view. This is the part of the UI containing all the anime info
 function addCard(data) {
-    var time = new Date(data.airing.time).toLocaleTimeString().replace(":00", "");
-    var cardBody = '<a style="text-decoration: none;" href="https://anilist.co/anime/' + data.id + '"><div> \
+    var time = new Date(data.media.nextAiringEpisode.airingAt * 1000).toLocaleTimeString().replace(":00", "");
+    var title = data.media.title.english != null ? data.media.title.english : data.media.title.romaji
+    var cardBody = '<a style="text-decoration: none;" href="https://anilist.co/anime/' + data.media.id + '"><div> \
                         <div class="uk-card uk-card-default uk-card-hover"> \
-                        <div class="uk-card-media-top" style="height: 325px; background: ' + "url('" + data.image_url_lge + "');" + 'background-size: cover; background-position: center center;"> \
+                        <div class="uk-card-media-top" style="height: 325px; background: ' + "url('" + data.media.coverImage.large + "');" + 'background-size: cover; background-position: center center;"> \
                         </div> \
                         <div class="uk-card-body"> \
-                            <h4>' + data.title_english + '</h4> \
+                            <h4>' + title + '</h4> \
                         </div> \
                     <div class="uk-card-footer"><span class="uk-margin-small-right" uk-icon="icon: clock"></span>'+ time +'</div> \
                     </div> \
@@ -236,8 +93,11 @@ function addCard(data) {
 // Setup a listener on the "Today" tab in the UI
 function initTodayOnClickListener(){
     $("#today").click(function(){
-        active_tab = TODAY;
-        processAnime(TODAY);
+        graphQLVariables = {
+            "last": (new Date().setHours(0,0,0,0) / 1000),
+            "next": (new Date().setHours(24,0,0,0) / 1000)
+        };
+        getAnime();
     });
 }
 
@@ -245,33 +105,52 @@ function initTodayOnClickListener(){
 // Setup a listener on the "Tomorrow" tab in the UI
 function initTomorrowOnClickListener(){
     $("#tomorrow").click(function(){
-        active_tab = TOMORROW;
-        processAnime(TOMORROW);
+        graphQLVariables = {
+            "last": (new Date().setHours(24,0,0,0) / 1000),
+            "next": (new Date().setHours(48,0,0,0) / 1000)
+        };
+        getAnime();
     });
 }
+
 
 // Setup listeners on the switches in the UI
 function initSortOnClickListener(){
     $("#sort-by-time").click(function(){
         setButtonState("#sort-by-time", true);
         setButtonState("#sort-by-name", false);
-        sort_by = 0;
-        processAnime(active_tab);
+        ANIME.sort(sort_functions[0]);
+        processAnime();
     });
     $("#sort-by-name").click(function(){
         setButtonState("#sort-by-time", false);
         setButtonState("#sort-by-name", true);
-        sort_by = 1;
-        processAnime(active_tab);
+        ANIME.sort(sort_functions[1]);
+        processAnime();
     });
 }
+
+
+var sort_functions = [
+    function(a, b) { // Sort function for time
+        return (new Date(a.media.nextAiringEpisode.airingAt)).valueOf() - (new Date(b.media.nextAiringEpisode.airingAt).valueOf())
+    },
+    function(a, b) { // Sort function for Name
+        var aTitle = a.media.title.english != null ? a.media.title.english : a.media.title.romaji;
+        var bTitle = b.media.title.english != null ? b.media.title.english : b.media.title.romaji;
+        if(aTitle < bTitle) return -1;
+        if(aTitle > bTitle) return 1;
+        return 0;
+    }
+];
+
 
 function initAdultFilterClickListener() {
     $("#block-adult").click(function(){
         isActive = getButtonState("#block-adult");
-        block_adult_content = !isActive;
+        block_adult_content = !block_adult_content;
         setButtonState("#block-adult");
-        processAnime(active_tab);
+        processAnime();
     });
 }
 
@@ -279,9 +158,9 @@ function initAdultFilterClickListener() {
 function setButtonState(button_id) {
     $(button_id).toggleClass("uk-button-default");
     $(button_id).toggleClass("uk-button-active"); 
-    if(getButtonState(button_id)){
+    if(button_id == "#block-adult" && getButtonState(button_id)){
         $(button_id).html('HIDE 18+ CONTENT');
-    } else{
+    } else if (button_id == "#block-adult") {
         $(button_id).html('SHOW 18+ CONTENT');
     }
 }
@@ -300,24 +179,4 @@ function initTabs(){
     var tomorrow = tomorrow_date.getMonth() + 1 + "/" + tomorrow_date.getDate() + "/" + tomorrow_date.getFullYear();
     $("#today").html("Today (" + today + ")");
     $("#tomorrow").html("Tomorrow (" + tomorrow + ")");
-}
-
-
-// Meant to use the following two methods in buildAnimeRequestURL() to reduce data usage, but I forgot :D
-function getSeason(){
-    var month = new Date().getMonth();
-    if(WINTER.indexOf(month)){
-        return "winter";
-    } else if(SPRING.indexOf(month)){
-        return "spring";
-    } else if(SUMMER.indexOf(month)){
-        return "summer";
-    } else if(FALL.indexOf(month)){
-        return "fall";
-    }
-}
-
-
-function getYear(){
-    return new Date().getFullYear();
 }
