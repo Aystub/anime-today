@@ -1,5 +1,6 @@
 var ANIME;
 var block_adult_content = true;
+var KITSU_URL = "https://kitsu.io/api/edge/anime?filter[text]=";
 
 // Run all the things
 $(function() {
@@ -50,6 +51,66 @@ function getAnime() {
     })
 }
 
+
+function navigateToKitsu(title) {
+    $(".loading-overlay").css("display", "flex");
+    $.ajax({
+        type: "GET",
+        url: KITSU_URL + encodeURI(title),
+        success: function(result) {
+            console.log(result.data);
+            var found = false;
+            if (result.data.length >= 0) {
+                for (var i = 0; i < result.data.length; i++) {
+                    if (result.data[i].attributes.status == "current") {
+                        window.location = "https://kitsu.io/anime/" + result.data[i].id;
+                        found = true;
+                        break;
+                    }
+                }
+            } 
+            if (!found) {
+               UIkit.modal.confirm("<div class='uk-modal-body'><h3>Shrug</h3><p>An exact lookup on Kitsu failed, want to be taken to the search results on Kitsu?</div>", function() {
+                    window.location = "https://kitsu.io/anime?text=" + encodeURI(title);
+               });            
+            }
+        }, 
+        error: function(error) {
+            console.log(error);
+            $(".loading-overlay").css("display", "none");
+            UIkit.modal.confirm("<div class='uk-modal-body'><h3>Shrug</h3><p>An exact lookup on Kitsu failed, want to be taken to the search results on Kitsu?</div>", function() {
+                window.location = "https://kitsu.io/anime?text=" + encodeURI(title);
+            });
+        }
+    })
+}
+
+
+function navigateToMAL(title) {
+    $(".loading-overlay").css("display", "flex");
+    $.ajax({
+        type: "GET",
+        url: "https://api.jikan.moe/search/anime/" + encodeURI(title) + "?status=airing",
+        success: function(data) {
+            if (data.result.length > 0) {
+                window.location = data.result[0].url;
+            } else {
+                UIkit.modal.confirm("<div class='uk-modal-body'><h3>Shrug</h3><p>An exact lookup on MAL failed, want to be taken to the search results on MAL?</div>", function() {
+                    window.location = "https://myanimelist.net/search/all?q=" + encodeURI(title);
+                }); 
+            }
+        },
+        error: function(error) {
+            console.log(error);
+            $(".loading-overlay").css("display", "none");
+            UIkit.modal.confirm("<div class='uk-modal-body'><h3>Shrug</h3><p>An exact lookup on MAL failed, want to be taken to the search results on MAL?</div>", function() {
+                window.location = "https://myanimelist.net/search/all?q=" + encodeURI(title);
+            });
+        }
+    })
+}
+
+
 //Sets the visibility of the connection error message
 function setErrorMessageDisplay(state){
     $('#error-message').attr('hidden',!state);
@@ -76,19 +137,42 @@ function clearCardHolder(){
 function addCard(data) {
     var time = new Date(data.media.nextAiringEpisode.airingAt * 1000).toLocaleTimeString().replace(":00", "");
     var title = data.media.title.english != null ? data.media.title.english : data.media.title.romaji
-    var cardBody = '<a style="text-decoration: none;" href="https://anilist.co/anime/' + data.media.id + '"><div> \
+    var anilink = "https://anilist.co/anime/" + data.media.id;
+    var cardBody = '<div class="anime" id="anime-' + data.media.id + '">\
                         <div class="uk-card uk-card-default uk-card-hover"> \
-                        <div class="uk-card-media-top" style="height: 325px; background: ' + "url('" + data.media.coverImage.large + "');" + 'background-size: cover; background-position: center center;"> \
+                            <div class="anime-overlay hide-overlay" id="anime-overlay-' + data.media.id + '"><button id="anilist-'+ data.media.id +'"class="uk-button uk-button-default anime-button">AniList</button><button id="kitsu-'+ data.media.id +'"class="uk-button uk-button-default anime-button" anime-title="' + data.media.title.romaji + '">Kitsu</button><button id="mal-'+ data.media.id +'"class="uk-button uk-button-default anime-button" anime-title="' + data.media.title.romaji + '">MAL</button></div>\
+                            <div class="uk-card-media-top" style="height: 325px; background: ' + "url('" + data.media.coverImage.large + "');" + 'background-size: cover; background-position: center center;"> \
+                            </div> \
+                            <div class="uk-card-body"> \
+                                <h4>' + title + '</h4> \
+                            </div> \
+                            <div class="uk-card-footer"><span class="uk-margin-small-right" uk-icon="icon: clock"></span>'+ time +'</div> \
                         </div> \
-                        <div class="uk-card-body"> \
-                            <h4>' + title + '</h4> \
-                        </div> \
-                    <div class="uk-card-footer"><span class="uk-margin-small-right" uk-icon="icon: clock"></span>'+ time +'</div> \
-                    </div> \
-                    </div></a>';
+                    </div>';
 
     $("#card-holder").append(cardBody);
+    applyCardClickedListener(data.media.id);
 }
+
+
+function applyCardClickedListener(id) {
+    $("#anime-" + id).click(function() {
+        $("#anime-overlay-" + id).toggleClass('hide-overlay');
+    });
+
+    $("#anilist-" + id).click(function() {
+        window.location = "https://anilist.co/anime/" + id;
+    });
+
+    $("#kitsu-" + id).click(function() {
+        navigateToKitsu($("#kitsu-" + id).attr("anime-title"));
+    });
+
+    $("#mal-" + id).click(function() {
+        navigateToMAL($("#mal-" + id).attr("anime-title"));
+    });
+}
+
 
 // Setup a listener on the "Today" tab in the UI
 function initTodayOnClickListener(){
@@ -116,17 +200,25 @@ function initTomorrowOnClickListener(){
 
 // Setup listeners on the switches in the UI
 function initSortOnClickListener(){
-    $("#sort-by-time").click(function(){
-        setButtonState("#sort-by-time", true);
-        setButtonState("#sort-by-name", false);
-        ANIME.sort(sort_functions[0]);
-        processAnime();
+    var nameSort = $("#sort-by-name");
+    var timeSort = $("#sort-by-time");
+
+    timeSort.click(function(){
+        if (!isButtonActive("#menu-button-active")) {
+            timeSort.toggleClass("menu-button-active");
+            nameSort.toggleClass("menu-button-active");
+            ANIME.sort(sort_functions[0]);
+            processAnime();
+        }
     });
-    $("#sort-by-name").click(function(){
-        setButtonState("#sort-by-time", false);
-        setButtonState("#sort-by-name", true);
-        ANIME.sort(sort_functions[1]);
-        processAnime();
+    
+    nameSort.click(function(){
+        if (!isButtonActive("#menu-button-active")) {
+            timeSort.toggleClass("menu-button-active");
+            nameSort.toggleClass("menu-button-active");
+            ANIME.sort(sort_functions[1]);
+            processAnime();
+        }
     });
 }
 
@@ -147,27 +239,17 @@ var sort_functions = [
 
 function initAdultFilterClickListener() {
     $("#block-adult").click(function(){
-        isActive = getButtonState("#block-adult");
         block_adult_content = !block_adult_content;
-        setButtonState("#block-adult");
+        $("#block-adult").toggleClass("menu-button-active");
+        $("#block-adult").html(block_adult_content ? "SHOW ANY 18+ CONTENT" : "HIDE ANY 18+ CONTENT");
         processAnime();
     });
 }
 
-// Setup the active state of the buttons
-function setButtonState(button_id) {
-    $(button_id).toggleClass("uk-button-default");
-    $(button_id).toggleClass("uk-button-active"); 
-    if(button_id == "#block-adult" && getButtonState(button_id)){
-        $(button_id).html('HIDE 18+ CONTENT');
-    } else if (button_id == "#block-adult") {
-        $(button_id).html('SHOW 18+ CONTENT');
-    }
-}
 
-// Get the active state of the buttons
-function getButtonState(button_id) {
-    return $(button_id).hasClass("uk-button-active");
+// Get whether or not a button is active
+function isButtonActive(button_id) {
+    return $(button_id).hasClass("menu-button-active");
 }
 
 // Initial setup of the Today and Tomorrow tabs so they can show the date in them
