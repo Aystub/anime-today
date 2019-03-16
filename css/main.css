@@ -122,7 +122,7 @@ textarea {
 }
 
 #sort-switches-div {
-    margin-bottom: 24px
+    margin-bottom: 24px;
 }
 
 .nav-bar-buffer{
@@ -134,6 +134,7 @@ textarea {
 
 #block-adult{
     text-align:center;
+    float: right;
 }
 
 .hide-overlay {
@@ -206,6 +207,22 @@ textarea {
     align-items: center;
 }
 
+
+
+@media only screen and (max-width: 590px) {
+    #sort-switches-div {
+        display: flex;
+        flex-flow: row wrap;
+        align-items: flex-start;
+        justify-content: space-evenly;
+    }
+
+    #block-adult{
+        float: none;
+    }
+}
+
+    
 
 
 /* ==========================================================================

@@ -58,7 +58,6 @@ function navigateToKitsu(title) {
         type: "GET",
         url: KITSU_URL + encodeURI(title),
         success: function(result) {
-            console.log(result.data);
             var found = false;
             if (result.data.length >= 0) {
                 for (var i = 0; i < result.data.length; i++) {
@@ -70,7 +69,7 @@ function navigateToKitsu(title) {
                 }
             } 
             if (!found) {
-               UIkit.modal.confirm("<div class='uk-modal-body'><h3>Shrug</h3><p>An exact lookup on Kitsu failed, want to be taken to the search results on Kitsu?</div>", function() {
+               UIkit.modal.confirm("<div><h3>Shrug</h3><p>An exact lookup on Kitsu failed, want to be taken to the search results on Kitsu?</div>").then(function() {
                     window.location = "https://kitsu.io/anime?text=" + encodeURI(title);
                });            
             }
@@ -78,7 +77,7 @@ function navigateToKitsu(title) {
         error: function(error) {
             console.log(error);
             $(".loading-overlay").css("display", "none");
-            UIkit.modal.confirm("<div class='uk-modal-body'><h3>Shrug</h3><p>An exact lookup on Kitsu failed, want to be taken to the search results on Kitsu?</div>", function() {
+            UIkit.modal.confirm("<div><h3>Shrug</h3><p>An exact lookup on Kitsu failed, want to be taken to the search results on Kitsu?</div>").then(function() {
                 window.location = "https://kitsu.io/anime?text=" + encodeURI(title);
             });
         }
@@ -90,12 +89,19 @@ function navigateToMAL(title) {
     $(".loading-overlay").css("display", "flex");
     $.ajax({
         type: "GET",
-        url: "https://api.jikan.moe/search/anime/" + encodeURI(title) + "?status=airing",
+        url: "https://api.jikan.moe/search/anime/" + encodeURI(title), // + "?status=airing",
         success: function(data) {
-            if (data.result.length > 0) {
-                window.location = data.result[0].url;
+            var foundIndex = -1;
+            for (var i = 0; i < data.result.length; i++) { 
+                if (similarity(title, data.result[i].title) >= .90) {
+                    foundIndex = i;
+                    break;
+                }
+            }
+            if (foundIndex > -1) {
+                window.location = data.result[foundIndex].url;
             } else {
-                UIkit.modal.confirm("<div class='uk-modal-body'><h3>Shrug</h3><p>An exact lookup on MAL failed, want to be taken to the search results on MAL?</div>", function() {
+                UIkit.modal.confirm("<div><h3>Shrug</h3><p>An exact lookup on MAL failed, want to be taken to the search results on MAL?</div>").then(function() {
                     window.location = "https://myanimelist.net/search/all?q=" + encodeURI(title);
                 }); 
             }
@@ -103,7 +109,7 @@ function navigateToMAL(title) {
         error: function(error) {
             console.log(error);
             $(".loading-overlay").css("display", "none");
-            UIkit.modal.confirm("<div class='uk-modal-body'><h3>Shrug</h3><p>An exact lookup on MAL failed, want to be taken to the search results on MAL?</div>", function() {
+            UIkit.modal.confirm("<div><h3>Shrug</h3><p>An exact lookup on MAL failed, want to be taken to the search results on MAL?</div>").then(function() {
                 window.location = "https://myanimelist.net/search/all?q=" + encodeURI(title);
             });
         }
@@ -120,7 +126,7 @@ function setErrorMessageDisplay(state){
 function processAnime(){
     clearCardHolder();
     for(var i = 0; i < ANIME.length; i++){
-        if (ANIME[i].media.isAdult == false || !block_adult_content) {
+        if (ANIME[i].media.status != "FINISHED" && (ANIME[i].media.isAdult == false || !block_adult_content)) {
             addCard(ANIME[i]);
         }
     }
@@ -161,6 +167,7 @@ function applyCardClickedListener(id) {
     });
 
     $("#anilist-" + id).click(function() {
+        $(".loading-overlay").css("display", "flex");
         window.location = "https://anilist.co/anime/" + id;
     });
 
@@ -261,4 +268,47 @@ function initTabs(){
     var tomorrow = tomorrow_date.getMonth() + 1 + "/" + tomorrow_date.getDate() + "/" + tomorrow_date.getFullYear();
     $("#today").html("Today (" + today + ")");
     $("#tomorrow").html("Tomorrow (" + tomorrow + ")");
+}
+
+
+function similarity(s1, s2) {
+  var longer = s1;
+  var shorter = s2;
+  if (s1.length < s2.length) {
+    longer = s2;
+    shorter = s1;
+  }
+  var longerLength = longer.length;
+  if (longerLength == 0) {
+    return 1.0;
+  }
+  return (longerLength - editDistance(longer, shorter)) / parseFloat(longerLength);
+}
+
+
+function editDistance(s1, s2) {
+  s1 = s1.toLowerCase();
+  s2 = s2.toLowerCase();
+
+  var costs = new Array();
+  for (var i = 0; i <= s1.length; i++) {
+    var lastValue = i;
+    for (var j = 0; j <= s2.length; j++) {
+      if (i == 0)
+        costs[j] = j;
+      else {
+        if (j > 0) {
+          var newValue = costs[j - 1];
+          if (s1.charAt(i - 1) != s2.charAt(j - 1))
+            newValue = Math.min(Math.min(newValue, lastValue),
+              costs[j]) + 1;
+          costs[j - 1] = lastValue;
+          lastValue = newValue;
+        }
+      }
+    }
+    if (i > 0)
+      costs[s2.length] = lastValue;
+  }
+  return costs[s2.length];
 }

@@ -16,6 +16,7 @@ var graphQLQuery = "\
                 timeUntilAiring\
                 episode\
             }\
+            status\
             isAdult\
             siteUrl\
           }\
